@@ -15,6 +15,16 @@ export async function createUser(user: User) {
   return newUser;
 }
 
+export async function getUserByClerkId(clerkId: string) {
+  const user = await prisma.user.findUnique({
+    where: {
+      clerkId,
+    },
+  });
+
+  return user;
+}
+
 export async function updateUser(
   id: string,
   user: Omit<Partial<User>, "clerkId">

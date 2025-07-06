@@ -16,13 +16,14 @@ datasource db {
 
 model User {
   id        String     @id @default(uuid())
-  name      String
+  name      String?
   imageUrl  String?
   email     String     @unique
   clerkId   String     @unique
   chats     ChatUser[]
   messages  Message[]
   createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 model Chat {
@@ -49,6 +50,7 @@ model Message {
   senderId  String
   chatId    String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
   chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
