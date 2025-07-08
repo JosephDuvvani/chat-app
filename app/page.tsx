@@ -1,13 +1,15 @@
-import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignedOut } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home() {
+  const { userId } = await auth();
+  if (userId) {
+    redirect("/chats");
+  }
   return (
     <>
-      <SignedIn>
-        <h1>Welcome home</h1>
-      </SignedIn>
-
       <SignedOut>
         <div className="flex flex-col justify-center items-center gap-6 min-h-svh">
           <h1 className="text-4xl font-bold">
