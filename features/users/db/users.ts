@@ -1,10 +1,17 @@
 import { prisma } from "@/lib/prisma";
 
 type User = {
-  name: string;
-  imageUrl?: string;
+  name: string | null;
+  imageUrl?: string | null;
   email: string;
   clerkId: string;
+};
+
+export type Person = {
+  id: string;
+  name: string | null;
+  imageUrl: string | null;
+  email: string;
 };
 
 export async function createUser(user: User) {
@@ -19,6 +26,16 @@ export async function getUserByClerkId(clerkId: string) {
   const user = await prisma.user.findUnique({
     where: {
       clerkId,
+    },
+  });
+
+  return user;
+}
+
+export async function getUserById(id: string) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id,
     },
   });
 
@@ -43,4 +60,27 @@ export async function deleteUser(id: string) {
   });
 
   return deletedUser;
+}
+
+const limit = 20;
+
+export async function fetchPeople(clerkId: string) {
+  try {
+    const people: Person[] = await prisma.user.findMany({
+      where: {
+        NOT: { clerkId },
+      },
+      select: {
+        id: true,
+        name: true,
+        imageUrl: true,
+        email: true,
+      },
+      take: limit,
+    });
+    return people;
+  } catch (err) {
+    console.error("Database Error", err);
+    throw new Error("Failed to fetch people");
+  }
 }
