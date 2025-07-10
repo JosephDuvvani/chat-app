@@ -1,10 +1,19 @@
-"use client";
-
 import Link from "next/link";
 import Navbar from "./Navbar";
 import ChatSearchForm from "@/features/chats/components/general/ChatSearchForm";
+import { getChats } from "@/features/chats/db/chats";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import ChatList from "@/features/chats/components/general/ChatList";
 
-export default function Sidebar() {
+export default async function Sidebar() {
+  const { userId } = await auth();
+  if (!userId) {
+    redirect("/sign-in");
+  }
+
+  const chatList = await getChats(userId, 0);
+
   return (
     <div className="flex flex-col bg-sky-950 text-sky-50">
       <div className="flex flex-col pt-1 px-4 bg-sky-950/50 backdrop-blur-2xl">
@@ -25,6 +34,9 @@ export default function Sidebar() {
           <Navbar />
         </div>
         <ChatSearchForm />
+      </div>
+      <div>
+        <ChatList chatList={chatList} />
       </div>
     </div>
   );
