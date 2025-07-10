@@ -12,6 +12,7 @@ export type Person = {
   name: string | null;
   imageUrl: string | null;
   email: string;
+  clerkId?: string;
 };
 
 export async function createUser(user: User) {

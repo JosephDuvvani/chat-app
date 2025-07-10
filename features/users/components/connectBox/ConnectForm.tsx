@@ -1,8 +1,15 @@
 "use client";
 
+import { sendConnectMessage, State } from "@/features/chats/actions/actions";
+import { useActionState } from "react";
+
 export default function ConnectForm({ receiverId }: { receiverId: string }) {
+  const initialState: State = { message: null, errors: {} };
+  const sendMessageWithId = sendConnectMessage.bind(null, receiverId);
+  const [state, formAction] = useActionState(sendMessageWithId, initialState);
+
   return (
-    <form className="flex flex-col max-w-2xl mx-auto">
+    <form action={formAction} className="flex flex-col max-w-2xl mx-auto">
       <input
         type="text"
         name="message"
@@ -11,6 +18,11 @@ export default function ConnectForm({ receiverId }: { receiverId: string }) {
         autoComplete="off"
         autoFocus
       />
+      <div>
+        {state.errors?.message && (
+          <span className="text-rose-600">{state.errors.message[0]}</span>
+        )}
+      </div>
       <div className="flex justify-end">
         <button
           type="submit"
