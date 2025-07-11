@@ -24,7 +24,7 @@ export default function Navbar() {
         <Link
           href={link.href}
           key={link.title + index}
-          className={`flex-1 text-center px-3 py-2 bg-sky-800 relative overflow-hidden hover:bg-sky-900 ${
+          className={`flex-1 text-center px-3 py-2 bg-sky-800 relative overflow-hidden outline-none hover:bg-sky-900 focus-visible:bg-sky-700 ${
             pathname.includes(link.href) ? "bg-sky-900" : ""
           }`}
         >

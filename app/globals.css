@@ -22,3 +22,22 @@
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@layer utilities {
+  .scrollbar::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+  }
+
+  .scrollbar::-webkit-scrollbar-track {
+    @apply bg-sky-800;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-sky-300 border-4 border-sky-800 rounded-full;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-sky-200;
+  }
+}

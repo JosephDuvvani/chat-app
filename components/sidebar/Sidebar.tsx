@@ -15,12 +15,12 @@ export default async function Sidebar() {
   const chatList = await getChatListByClerkId(userId, 0);
 
   return (
-    <div className="flex flex-col bg-sky-950 text-sky-50">
-      <div className="flex flex-col pt-1 px-4 bg-sky-950/50 backdrop-blur-2xl">
-        <div className="flex">
+    <div className="flex flex-col bg-sky-950 text-sky-50 max-w-[350px]">
+      <div className="flex flex-col pt-1 px-4 bg-sky-950/">
+        <div className="flex mb-2">
           <Link
             href="/chats"
-            className="py-2 px-4 rounded-full hover:bg-sky-900/50"
+            className="py-2 px-4 rounded-full outline-none hover:bg-sky-900/50 focus-visible:bg-sky-900/50"
           >
             <h1 className="text-3xl font-bold">
               C
@@ -35,7 +35,7 @@ export default async function Sidebar() {
         </div>
         <ChatSearchForm />
       </div>
-      <div>
+      <div className="overflow-y-auto scrollbar h-[calc(100svh-170px)] pt-6 pb-20">
         <ChatList chatList={chatList} />
       </div>
     </div>
