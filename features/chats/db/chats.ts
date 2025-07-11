@@ -71,15 +71,17 @@ export async function getChatIdByUsers(userA_Id: string, userB_Id: string) {
 }
 
 const limit = 20;
-export async function getChats(
-  userId: string,
+export async function getChatListByClerkId(
+  clerkId: string,
   offset: number
 ): Promise<Chat[]> {
   const data = await prisma.chat.findMany({
     where: {
       users: {
         some: {
-          userId,
+          user: {
+            clerkId,
+          },
         },
       },
     },
@@ -87,7 +89,9 @@ export async function getChats(
       users: {
         where: {
           NOT: {
-            userId,
+            user: {
+              clerkId,
+            },
           },
         },
         select: {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Navbar from "./Navbar";
 import ChatSearchForm from "@/features/chats/components/general/ChatSearchForm";
-import { getChats } from "@/features/chats/db/chats";
+import { getChatListByClerkId } from "@/features/chats/db/chats";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import ChatList from "@/features/chats/components/general/ChatList";
@@ -12,7 +12,7 @@ export default async function Sidebar() {
     redirect("/sign-in");
   }
 
-  const chatList = await getChats(userId, 0);
+  const chatList = await getChatListByClerkId(userId, 0);
 
   return (
     <div className="flex flex-col bg-sky-950 text-sky-50">
