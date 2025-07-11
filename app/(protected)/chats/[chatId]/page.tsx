@@ -1,11 +1,13 @@
-import SendMessage from "@/features/chats/components/chatBox/SendMessage";
+import ChatBox from "@/features/chats/components/chatBox/ChatBox";
 
-export default function OpenChat() {
-  return (
-    <div className="flex flex-col flex-1 h-svh relative">
-      <div className="absolute inset-x-0 bottom-0 px-4 py-2 bg-sky-100">
-        <SendMessage />
-      </div>
-    </div>
-  );
+interface OpenChatProps {
+  params: {
+    chatId: string;
+  };
+}
+
+export default function OpenChat({ params }: OpenChatProps) {
+  const { chatId } = params;
+
+  return <ChatBox chatId={chatId} />;
 }
