@@ -53,6 +53,16 @@ export async function chatExists(userA_Id: string, userB_Id: string) {
   return !!chat;
 }
 
+export async function isChatUser(userId: string, chatId: string) {
+  const chat = await prisma.chat.findFirst({
+    where: {
+      AND: [{ id: chatId }, { users: { some: { userId } } }],
+    },
+  });
+
+  return !!chat;
+}
+
 export async function getChatIdByUsers(userA_Id: string, userB_Id: string) {
   const chat = await prisma.chat.findFirst({
     where: {
