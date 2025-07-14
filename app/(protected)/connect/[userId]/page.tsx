@@ -1,6 +1,7 @@
 import ConnectForm from "@/features/users/components/connectBox/ConnectForm";
 import { getUserById } from "@/features/users/db/users";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import React from "react";
 
 export default async function ConnectWithUser({
@@ -8,10 +9,10 @@ export default async function ConnectWithUser({
 }: {
   params: { userId: string };
 }) {
-  const user = await getUserById(params.userId);
+  const receiver = await getUserById(params.userId);
 
-  if (!user) {
-    return <div>User not found</div>;
+  if (!receiver) {
+    return notFound();
   }
 
   return (
@@ -21,7 +22,7 @@ export default async function ConnectWithUser({
         <div className="flex items-center">
           <div>
             <Image
-              src={user.imageUrl || ""}
+              src={receiver.imageUrl || ""}
               width={30}
               height={30}
               className="rounded-full"
@@ -29,10 +30,10 @@ export default async function ConnectWithUser({
             />
           </div>
           <div className="flex-1 px-2">
-            <div className="text-neutral-500">{user.name}</div>
+            <div className="text-neutral-500">{receiver.name}</div>
           </div>
         </div>
-        <ConnectForm receiverId={user.id} />
+        <ConnectForm receiverId={receiver.id} />
       </div>
     </div>
   );

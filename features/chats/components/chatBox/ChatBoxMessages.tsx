@@ -1,4 +1,3 @@
-import React from "react";
 import { Message } from "@/features/chats/db/chats";
 import { Person } from "@/features/users/db/users";
 import MessageBox from "./MessageBox";

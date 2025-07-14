@@ -50,7 +50,7 @@ export async function chatExists(userA_Id: string, userB_Id: string) {
     },
   });
 
-  return !!chat;
+  return chat ? { chatId: chat.id } : null;
 }
 
 export async function isChatUser(userId: string, chatId: string) {

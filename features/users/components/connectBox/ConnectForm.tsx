@@ -1,15 +1,47 @@
 "use client";
 
-import { sendConnectMessage, State } from "@/features/chats/actions/actions";
-import { useActionState } from "react";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useSocket } from "@/components/providers/SocketProvider";
+import { useRouter } from "next/navigation";
+import { FormEvent, useEffect } from "react";
 
 export default function ConnectForm({ receiverId }: { receiverId: string }) {
-  const initialState: State = { message: null, errors: {} };
-  const sendMessageWithId = sendConnectMessage.bind(null, receiverId);
-  const [state, formAction] = useActionState(sendMessageWithId, initialState);
+  const router = useRouter();
+  const socket = useSocket();
+  const authUser = useAuth();
+  const senderId = authUser?.id;
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRedirect = ({ chatId }: { chatId: string }) => {
+      router.push(`/chats/${chatId}`);
+    };
+
+    socket.on("redirect_to_chat", handleRedirect);
+
+    return () => {
+      socket.off("redirect_to_chat", handleRedirect);
+    };
+  }, [socket]);
+
+  const handleSend = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!socket || !senderId) return;
+    const formData = new FormData(e.currentTarget);
+    const message = formData.get("message")?.toString().trim();
+
+    if (!message || message.length === 0) return;
+
+    socket.emit("connect-message", {
+      content: message,
+      receiverId,
+      senderId,
+    });
+  };
 
   return (
-    <form action={formAction} className="flex flex-col max-w-2xl mx-auto">
+    <form onSubmit={handleSend} className="flex flex-col max-w-2xl mx-auto">
       <input
         type="text"
         name="message"
@@ -18,11 +50,6 @@ export default function ConnectForm({ receiverId }: { receiverId: string }) {
         autoComplete="off"
         autoFocus
       />
-      <div>
-        {state.errors?.message && (
-          <span className="text-rose-600">{state.errors.message[0]}</span>
-        )}
-      </div>
       <div className="flex justify-end">
         <button
           type="submit"

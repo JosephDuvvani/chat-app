@@ -1,25 +1,40 @@
 "use client";
 
 import { SendIcon } from "lucide-react";
-import { sendMessage, State } from "@/features/chats/actions/actions";
-import { useActionState } from "react";
+import { useSocket } from "@/components/providers/SocketProvider";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { FormEvent } from "react";
 
-export default function SendMessage({ chatId }: { chatId: string }) {
-  const initialState: State = { message: null, errors: {} };
-  const sendMessageWithChatId = sendMessage.bind(null, chatId);
-  const [state, formAction] = useActionState(
-    sendMessageWithChatId,
-    initialState
-  );
+interface SendMessageProps {
+  chatId: string;
+}
+
+export default function SendMessage({ chatId }: SendMessageProps) {
+  const socket = useSocket();
+  const authUser = useAuth();
+  const senderId = authUser?.id;
+
+  const handleSend = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!socket || !senderId) return;
+    const formData = new FormData(e.currentTarget);
+    const message = formData.get("message")?.toString().trim();
+
+    if (!message || message.length === 0) return;
+
+    const msg = {
+      content: message,
+      chatId,
+      senderId,
+    };
+    socket.emit("message", msg);
+
+    e.currentTarget.reset();
+  };
 
   return (
     <>
-      <div>
-        {state.errors?.message && (
-          <span className="text-rose-600">{state.errors.message[0]}</span>
-        )}
-      </div>
-      <form action={formAction} className="flex">
+      <form onSubmit={handleSend} className="flex">
         <input
           className="flex-1 outline-none bg-sky-900 text-sky-50 py-2 px-4 rounded-full mr-2"
           type="text"

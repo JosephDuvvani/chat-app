@@ -1,36 +1,89 @@
+"use client";
+
 import SendMessage from "@/features/chats/components/chatBox/SendMessage";
-import { getChat } from "@/features/chats/db/chats";
-import { auth } from "@clerk/nextjs/server";
-import { notFound } from "next/navigation";
+import { FullChat } from "@/features/chats/db/chats";
 import ChatBoxMessages from "./ChatBoxMessages";
 import ChatBoxHeader from "./ChatBoxHeader";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useEffect, useRef, useState } from "react";
+import { Message } from "@/app/generated/prisma";
+import { useSocket } from "@/components/providers/SocketProvider";
+import ScrollToBottom from "./ScrollToBottom";
 
-export default async function ChatBox({ chatId }: { chatId: string }) {
-  const { userId } = await auth();
-  const chat = await getChat(chatId);
+export default function ChatBox({ chat }: { chat: FullChat }) {
+  const [chatMessages, setChatMessages] = useState<Message[]>(
+    () => chat.messages
+  );
+  const [notification, setNotification] = useState(0);
+  const socket = useSocket();
+  const chatId = chat.id;
+  const authUser = useAuth();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  if (!chat) {
-    return notFound();
-  }
+  const isNearBottom = () => {
+    const el = scrollRef.current;
+    if (!el) return false;
+    const boundry = 150;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < boundry;
+  };
 
-  const { users, messages } = chat;
-  const me = users.find((user) => user.clerkId === userId);
-  const receiver = users.find((user) => user.clerkId !== userId);
+  useEffect(() => {
+    if (!socket || !authUser) return;
+
+    const handleMessage = (msg: Message) => {
+      if (!isNearBottom() && msg.senderId !== authUser.id)
+        setNotification((prev) => prev + 1);
+      setChatMessages((prev) => (prev ? [...prev, msg] : [msg]));
+    };
+
+    socket.emit("join-chat", chatId, authUser.name);
+
+    socket.on("message", handleMessage);
+
+    return () => {
+      socket.emit("leave-chat", chatId, authUser.name);
+      socket.off("message", handleMessage);
+    };
+  }, [authUser?.id, socket?.id]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView();
+  }, [authUser?.id]);
+
+  useEffect(() => {
+    if (isNearBottom()) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages]);
+
+  if (!authUser) return null;
+
+  const me = chat.users.find((user) => user.id === authUser.id);
+  const receiver = chat.users.find((user) => user.id !== authUser.id);
 
   if (!me || !receiver) {
-    throw new Error("Chat users unidentified");
+    return null;
   }
 
   return (
     <div className="flex flex-col flex-1 h-svh max-h-svh relative">
       <ChatBoxHeader receiver={receiver} />
 
-      <div className="flex-1 overflow-auto px-4">
-        <ChatBoxMessages messages={messages} users={{ me: me, receiver }} />
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        <ChatBoxMessages messages={chatMessages} users={{ me, receiver }} />
+        <div ref={bottomRef} />
+        <ScrollToBottom
+          containerRef={scrollRef}
+          bottomRef={bottomRef}
+          isNearBottom={isNearBottom}
+          notification={notification}
+          setNotification={setNotification}
+        />
       </div>
 
       <div className="sticky inset-x-0 bottom-0 px-4 py-2 bg-sky-100">
-        <SendMessage chatId={chat.id} />
+        <SendMessage chatId={chatId} />
       </div>
     </div>
   );
