@@ -15,6 +15,7 @@ export type Chat = {
   users: Omit<Person, "email">[];
   messages: { content: string }[];
   createdAt: Date;
+  updatedAt: Date;
 };
 
 export type FullChat = {
@@ -125,7 +126,7 @@ export async function getChatListByClerkId(
       },
     },
     orderBy: {
-      createdAt: "desc",
+      updatedAt: "desc",
     },
     take: limit,
     skip: offset,

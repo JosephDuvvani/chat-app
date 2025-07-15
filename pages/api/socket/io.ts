@@ -7,8 +7,14 @@ import {
   ChatMessage,
   NextApiResponseWithSocket,
 } from "@/types";
-import { chatExists, createChat, isChatUser } from "@/features/chats/db/chats";
+import {
+  Chat,
+  chatExists,
+  createChat,
+  isChatUser,
+} from "@/features/chats/db/chats";
 import { createMessage } from "@/features/chats/db/messages";
+import { getUserById } from "@/features/users/db/users";
 
 export const config = {
   api: {
@@ -30,7 +36,10 @@ export default function socketHandler(
     res.socket.server.io = io;
 
     io.on("connection", (socket) => {
-      console.log("User connected:", socket.id);
+      socket.on("join-user", (userId: string) => {
+        console.log("User connected:", userId);
+        socket.join(userId);
+      });
 
       socket.on("join-chat", (chatId: string, name: string) => {
         socket.join(chatId);
@@ -63,17 +72,37 @@ export default function socketHandler(
             senderId,
             content,
           });
+          const userA = await getUserById(senderId);
+          const userB = await getUserById(receiverId);
 
+          if (!userA || !userB) throw new Error("User record not found");
+          const users = [userA, userB].map((user) => ({
+            id: user.id,
+            name: user?.name,
+            imageUrl: user?.imageUrl,
+            clerkId: user.clerkId,
+          }));
+          const chat: Chat = {
+            id: newChat.id,
+            createdAt: newChat.createdAt,
+            updatedAt: newChat.updatedAt,
+            messages: [{ content: message.content }],
+            users: [users[1]],
+          };
+
+          io.to(senderId).emit("new-chat", chat);
+          io.to(receiverId).emit("new-chat", { ...chat, users: [users[0]] });
           socket.emit("redirect_to_chat", { chatId: newChat.id });
         }
       });
 
-      socket.on("message", async (msg: ChatMessage) => {
+      socket.on("message", async (msg: ChatMessage, receiverId: string) => {
         const { senderId, chatId } = msg;
         const isInChat = await isChatUser(senderId, chatId);
         if (isInChat) {
           const message = await createMessage(msg);
           io.to(chatId).emit("message", message);
+          io.to([senderId, receiverId]).emit("last-message", message);
         }
       });
 

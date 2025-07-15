@@ -83,7 +83,7 @@ export default function ChatBox({ chat }: { chat: FullChat }) {
       </div>
 
       <div className="sticky inset-x-0 bottom-0 px-4 py-2 bg-sky-100">
-        <SendMessage chatId={chatId} />
+        <SendMessage chatId={chatId} receiverId={receiver.id} />
       </div>
     </div>
   );

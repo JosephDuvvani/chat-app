@@ -7,9 +7,10 @@ import React from "react";
 export default async function ConnectWithUser({
   params,
 }: {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }) {
-  const receiver = await getUserById(params.userId);
+  const { userId } = await params;
+  const receiver = await getUserById(userId);
 
   if (!receiver) {
     return notFound();

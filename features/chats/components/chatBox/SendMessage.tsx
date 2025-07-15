@@ -7,9 +7,10 @@ import { FormEvent } from "react";
 
 interface SendMessageProps {
   chatId: string;
+  receiverId: string;
 }
 
-export default function SendMessage({ chatId }: SendMessageProps) {
+export default function SendMessage({ chatId, receiverId }: SendMessageProps) {
   const socket = useSocket();
   const authUser = useAuth();
   const senderId = authUser?.id;
@@ -27,7 +28,7 @@ export default function SendMessage({ chatId }: SendMessageProps) {
       chatId,
       senderId,
     };
-    socket.emit("message", msg);
+    socket.emit("message", msg, receiverId);
 
     e.currentTarget.reset();
   };

@@ -14,7 +14,7 @@ export default function ChatItem({ chat }: ChatItemProps) {
   const message = chat.messages.length > 0 ? chat.messages[0].content : "";
 
   const pathname = usePathname();
-  const isActive = pathname.includes(chat.id);
+  const isActive = pathname?.includes(chat.id);
 
   return (
     <Link
