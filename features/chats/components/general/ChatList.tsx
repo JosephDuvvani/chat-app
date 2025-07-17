@@ -20,7 +20,7 @@ export default function ChatList({ chatList }: { chatList: Chat[] }) {
 
       const updatedChat: Chat = {
         ...oldChat,
-        messages: [{ content: msg.content }],
+        messages: [msg],
       };
 
       setChats((prev) => [
@@ -33,11 +33,38 @@ export default function ChatList({ chatList }: { chatList: Chat[] }) {
       setChats((prev) => [chat, ...prev]);
     };
 
+    const handleLastSeenAt = (data: {
+      chatId: string;
+      userId: string;
+      lastSeenAt: Date;
+    }) => {
+      const oldChat = chats.find((chat) => chat.id === data.chatId);
+
+      if (!oldChat) return;
+
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === data.chatId
+            ? {
+                ...chat,
+                users: chat.users.map((userData) =>
+                  userData.user.id === data.userId
+                    ? { ...userData, lastSeenAt: data.lastSeenAt }
+                    : userData
+                ),
+              }
+            : chat
+        )
+      );
+    };
+
     socket.on("last-message", handleMessage);
+    socket.on("last-seen-at", handleLastSeenAt);
     socket.on("new-chat", handleChat);
 
     return () => {
       socket.off("last-message", handleMessage);
+      socket.off("last-seen-at", handleLastSeenAt);
       socket.off("new-chat", handleChat);
     };
   }, [socket]);
@@ -45,11 +72,13 @@ export default function ChatList({ chatList }: { chatList: Chat[] }) {
   return (
     <div>
       {chats.length > 0 ? (
-        chats.map((chat) => (
-          <div key={chat.id}>
-            <ChatItem chat={chat} />
-          </div>
-        ))
+        <div className="flex flex-col gap-1">
+          {chats.map((chat) => (
+            <div key={chat.id}>
+              <ChatItem chat={chat} />
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="flex justify-center">
           <span className="text-xl text-sky-100/70">No Chats</span>

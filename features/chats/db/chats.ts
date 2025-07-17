@@ -12,8 +12,8 @@ export type Message = {
 
 export type Chat = {
   id: string;
-  users: Omit<Person, "email">[];
-  messages: { content: string }[];
+  users: { user: Omit<Person, "email">; lastSeenAt: Date | null }[];
+  messages: Message[];
   createdAt: Date;
   updatedAt: Date;
 };
@@ -98,13 +98,6 @@ export async function getChatListByClerkId(
     },
     include: {
       users: {
-        where: {
-          NOT: {
-            user: {
-              clerkId,
-            },
-          },
-        },
         select: {
           user: {
             select: {
@@ -113,12 +106,10 @@ export async function getChatListByClerkId(
               imageUrl: true,
             },
           },
+          lastSeenAt: true,
         },
       },
       messages: {
-        select: {
-          content: true,
-        },
         orderBy: {
           createdAt: "desc",
         },
@@ -132,12 +123,7 @@ export async function getChatListByClerkId(
     skip: offset,
   });
 
-  const chats = data.map((chat) => ({
-    ...chat,
-    users: chat.users.map((data) => data.user),
-  }));
-
-  return chats;
+  return data;
 }
 
 export async function getChat(id: string): Promise<FullChat | null> {

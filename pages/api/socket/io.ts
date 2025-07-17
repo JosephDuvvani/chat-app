@@ -15,6 +15,7 @@ import {
 } from "@/features/chats/db/chats";
 import { createMessage } from "@/features/chats/db/messages";
 import { getUserById } from "@/features/users/db/users";
+import { updateLastSeenAt } from "@/features/chats/db/chatUser";
 
 export const config = {
   api: {
@@ -42,13 +43,22 @@ export default function socketHandler(
       });
 
       socket.on("join-chat", (chatId: string, name: string) => {
-        socket.join(chatId);
-        console.log(`${name} joined chat: ${chatId}`);
+        if (!socket.rooms.has(chatId)) {
+          socket.join(chatId);
+          console.log(`${name} joined chat: ${chatId}`);
+        }
       });
 
-      socket.on("leave-chat", (chatId: string, name: string) => {
-        socket.leave(chatId);
-        console.log(`${name} left chat: ${chatId}`);
+      socket.on("leave-chat", async (chatId: string, userId: string) => {
+        const chatUser = await updateLastSeenAt(userId, chatId);
+        io.to(userId).emit("last-seen-at", {
+          chatId,
+          userId,
+          lastSeenAt: chatUser.lastSeenAt,
+        });
+        if (process.env.NODE_ENV === "production") {
+          socket.leave(chatId);
+        }
       });
 
       socket.on("connect-message", async (msg: ConnectMessage) => {
@@ -64,6 +74,7 @@ export default function socketHandler(
           });
 
           socket.to(chatId).emit("message", message);
+          io.to([senderId, receiverId]).emit("last-message", message);
           socket.emit("redirect_to_chat", { chatId });
         } else {
           const newChat = await createChat(senderId, receiverId);
@@ -77,17 +88,20 @@ export default function socketHandler(
 
           if (!userA || !userB) throw new Error("User record not found");
           const users = [userA, userB].map((user) => ({
-            id: user.id,
-            name: user?.name,
-            imageUrl: user?.imageUrl,
-            clerkId: user.clerkId,
+            user: {
+              id: user.id,
+              name: user?.name,
+              imageUrl: user?.imageUrl,
+              clerkId: user.clerkId,
+            },
+            lastSeenAt: null,
           }));
           const chat: Chat = {
             id: newChat.id,
             createdAt: newChat.createdAt,
             updatedAt: newChat.updatedAt,
-            messages: [{ content: message.content }],
-            users: [users[1]],
+            messages: [message],
+            users,
           };
 
           io.to(senderId).emit("new-chat", chat);

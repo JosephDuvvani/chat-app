@@ -31,25 +31,32 @@ export default function ChatBox({ chat }: { chat: FullChat }) {
   useEffect(() => {
     if (!socket || !authUser) return;
 
+    socket.emit("join-chat", chatId, authUser.name);
+
+    return () => {
+      socket.emit("leave-chat", chatId, authUser.id);
+    };
+  }, [socket, authUser?.id, chat.id]);
+
+  useEffect(() => {
+    if (!socket?.connect || !authUser) return;
     const handleMessage = (msg: Message) => {
       if (!isNearBottom() && msg.senderId !== authUser.id)
         setNotification((prev) => prev + 1);
-      setChatMessages((prev) => (prev ? [...prev, msg] : [msg]));
-    };
 
-    socket.emit("join-chat", chatId, authUser.name);
+      setChatMessages((prev) => [...prev, msg]);
+    };
 
     socket.on("message", handleMessage);
 
     return () => {
-      socket.emit("leave-chat", chatId, authUser.name);
       socket.off("message", handleMessage);
     };
-  }, [authUser?.id, socket?.id]);
+  }, [socket?.connected, authUser?.id]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView();
-  }, [authUser?.id]);
+  }, [authUser]);
 
   useEffect(() => {
     if (isNearBottom()) {

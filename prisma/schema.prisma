@@ -35,9 +35,10 @@ model Chat {
 }
 
 model ChatUser {
-  id     String @id @default(uuid())
-  userId String
-  chatId String
+  id         String    @id @default(uuid())
+  userId     String
+  chatId     String
+  lastSeenAt DateTime?
 
   user User @relation(fields: [userId], references: [id])
   chat Chat @relation(fields: [chatId], references: [id])
